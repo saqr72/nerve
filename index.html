@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>نيرف NERVE — قيّم تجربتك</title>
+<meta name="description" content="قيّم تجربتك في نيرف NERVE خلال ثوانٍ. رأيك يشعل تجربتك القادمة.">
+<meta name="theme-color" content="#EAF5FA">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   نيرف NERVE — قمع تقييم (Review Funnel)
+   ملف واحد: HTML + CSS + JS مضمّنة
+   قيم ثابتة حسب المواصفات:
+   - دائرة الافتتاحية 184px · حلقة r=87 · الرقم 54px · SECONDS 12px (هنا فقط)
+   - شارة البطاقة 60px · أيقونة 19px · الرقم 12px · SECONDS 7px بتباعد .06em
+   - البطاقة 460px · حشو 22px · نقطة توقف 380px (حشو، نجوم، أزرار)
+   ============================================================ */
+
+/* ---------- 1) Tokens ---------- */
+:root{
+  --bg:#EAF5FA;
+  --card:#FFFFFF;
+  --ink:#14303F;
+  --blue:#1498D6;
+  --mint:#5FC9B8;
+  --violet:#8B7BD8;
+  --grad:linear-gradient(90deg,#8B7BD8 0%,#5FC9B8 50%,#1498D6 100%);
+  --ink-70:rgba(20,48,63,.70);
+  --ink-55:rgba(20,48,63,.55);
+  --ink-40:rgba(20,48,63,.40);
+  --ink-16:rgba(20,48,63,.16);
+  --ink-10:rgba(20,48,63,.10);
+  --ink-08:rgba(20,48,63,.08);
+  --wa:#1FA855;
+
+  --card-w:460px;
+  --pad:22px;
+  --radius:26px;
+
+  --splash-size:184px;   /* دائرة الافتتاحية */
+  --splash-num:54px;     /* رقم الافتتاحية */
+  --splash-label:12px;   /* SECONDS هنا فقط */
+
+  --badge-size:60px;     /* شارة البطاقة */
+  --badge-icon:19px;
+  --badge-num:12px;
+  --badge-label:7px;     /* SECONDS في البطاقة — محدّد منفصل */
+
+  --star:46px;
+  --btn-h:52px;
+  --btn-fs:15px;
+  --ring-c:546.63;       /* 2πr = 2π×87 */
+
+  --font-ui:"Tajawal","Noto Sans Arabic","Segoe UI",system-ui,sans-serif;
+  --font-en:"Poppins","Segoe UI",system-ui,sans-serif;
+}
+
+/* ---------- 2) Base ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  min-height:100vh;
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding:28px 16px;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-ui);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+img{display:block;max-width:100%}
+h1{margin:0}
+:focus-visible{outline:3px solid rgba(20,152,214,.60);outline-offset:3px}
+.en{direction:ltr;unicode-bidi:isolate}
+.sep{opacity:.5;margin:0 .38em;direction:ltr;unicode-bidi:isolate;display:inline-block}
+
+/* ---------- 3) الخلفية (عقد عصبية + أيقونة البرق) ---------- */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(64px);opacity:.6}
+.blob--1{width:52vmax;height:52vmax;top:-22vmax;right:-16vmax;
+  background:radial-gradient(circle,rgba(95,201,184,.55),rgba(95,201,184,0) 70%)}
+.blob--2{width:46vmax;height:46vmax;bottom:-20vmax;left:-16vmax;
+  background:radial-gradient(circle,rgba(139,123,216,.50),rgba(139,123,216,0) 70%)}
+.net{position:absolute;inset:0;width:100%;height:100%}
+.bolt-wm{position:absolute;width:46vmin;height:46vmin;bottom:-10vmin;left:-8vmin;
+  fill:rgba(20,152,214,.10);transform:rotate(-9deg)}
+
+/* ---------- 4) شاشة الافتتاحية ---------- */
+.splash{
+  position:fixed;inset:0;z-index:30;
+  display:grid;place-items:center;
+  padding:26px 18px;
+  background:radial-gradient(72% 56% at 50% 40%,rgba(255,255,255,.86),rgba(255,255,255,0) 76%);
+  transition:transform .85s cubic-bezier(.16,1,.3,1),opacity .5s ease .25s,visibility 0s linear 0s;
+  will-change:transform;
+}
+.splash.is-out{
+  transform:translateY(-100%);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:transform .85s cubic-bezier(.16,1,.3,1),opacity .5s ease .25s,visibility 0s linear .85s;
+}
+.splash-in{display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center;max-width:420px}
+/* دخول متدرّج ناعم لمحتوى الافتتاحية */
+.splash-in > *{animation:softIn .75s cubic-bezier(.16,1,.3,1) backwards}
+.splash-in > *:nth-child(2){animation-delay:.10s}
+.splash-in > *:nth-child(3){animation-delay:.20s}
+.splash-in > *:nth-child(4){animation-delay:.30s}
+
+/* مقفل العلامة: رمز N + الكلمة (اتجاه LTR ثابت للشعار) */
+.lockup{display:flex;align-items:center;justify-content:center;gap:18px;direction:ltr}
+.lockup-n{height:96px;width:auto;filter:drop-shadow(0 12px 20px rgba(20,48,63,.22))}
+.lockup-word{height:92px;width:auto}
+.word{position:relative;display:flex;align-items:center;justify-content:center}
+.word-txt{
+  display:none;
+  font-family:var(--font-en);font-weight:700;font-size:34px;letter-spacing:.16em;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-fill-color:transparent;padding-inline-start:.16em;
+}
+.no-logo .lockup-word,.no-logo .brand img{display:none}
+.no-logo .word-txt{display:inline-block}
+
+/* دائرة العدّاد — حلقة تتحرك بسلاسة عبر خاصية مسجّلة */
+@property --p{syntax:'<number>';inherits:true;initial-value:1}
+.timer{position:relative;width:var(--splash-size);height:var(--splash-size);display:grid;place-items:center}
+.ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:rgba(20,48,63,.10);stroke-width:5}
+.ring-fill{fill:none;stroke:url(#ringGrad);stroke-width:5;stroke-linecap:round;
+  stroke-dasharray:var(--ring-c);stroke-dashoffset:0;transition:stroke-dashoffset .9s linear}
+.timer-read{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px}
+.splash-num{font-family:var(--font-en);font-weight:600;font-size:var(--splash-num);line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.splash-label{font-family:var(--font-en);font-size:var(--splash-label);line-height:1;
+  letter-spacing:.34em;color:var(--ink-40);text-transform:uppercase;padding-inline-start:.34em}
+
+.splash-copy{display:flex;flex-direction:column;gap:7px}
+.splash-title{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.splash-title-en{font-family:var(--font-en);font-size:14px;font-weight:500;color:var(--ink-55)}
+
+.chip{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.4em;
+  margin:0;max-width:100%;padding:9px 16px;border-radius:999px;
+  background:rgba(255,255,255,.92);border:1px solid var(--ink-10);
+  box-shadow:0 12px 26px -20px rgba(20,48,63,.7);
+  font-size:13px;font-weight:500;color:var(--ink-70);
+}
+.chip-ico{width:15px;height:15px;flex:none;fill:var(--blue)}
+
+/* ---------- 5) البطاقة ---------- */
+.stage{
+  position:relative;z-index:1;width:100%;max-width:var(--card-w);
+  opacity:0;visibility:hidden;transform:translateY(16px) scale(.985);
+}
+.stage.is-in{
+  opacity:1;visibility:visible;transform:none;
+  transition:opacity .6s ease .10s,transform .8s cubic-bezier(.16,1,.3,1) .10s,visibility 0s linear 0s;
+}
+/* دخول متدرّج ناعم لأجزاء البطاقة */
+.stage.is-in .head{animation:softIn .7s cubic-bezier(.16,1,.3,1) .15s backwards}
+.stage.is-in .q{animation:softIn .7s cubic-bezier(.16,1,.3,1) .28s backwards}
+.stage.is-in .stars{animation:softIn .7s cubic-bezier(.16,1,.3,1) .41s backwards}
+.stage.is-in .msg{animation:softIn .7s cubic-bezier(.16,1,.3,1) .54s backwards}
+.card{
+  position:relative;overflow:hidden;
+  background:var(--card);
+  border:1px solid var(--ink-08);
+  border-radius:var(--radius);
+  padding:var(--pad);
+  box-shadow:0 30px 60px -30px rgba(20,48,63,.45),0 12px 26px -16px rgba(20,48,63,.28);
+}
+.card::before{content:"";position:absolute;top:0;inset-inline:0;height:4px;background:var(--grad)}
+
+/* الترويسة: العلامة متمركزة في عمودها بدون حشو جانبي */
+.head{
+  display:grid;
+  grid-template-columns:var(--badge-size) auto var(--badge-size);
+  align-items:center;
+  gap:10px;
+}
+.brand{grid-column:2;text-align:center;padding:0;min-width:0}
+.brand .word{min-height:1px}
+.brand img{height:80px;width:auto;max-width:100%;margin-inline:auto;object-fit:contain;
+  filter:drop-shadow(0 6px 12px rgba(20,48,63,.12))}
+.brand .word-txt{font-size:26px}
+.head-space{width:var(--badge-size)}
+
+/* الشارة */
+.badge{
+  position:relative;width:var(--badge-size);height:var(--badge-size);border-radius:50%;
+  background:#fff;--p:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  box-shadow:0 10px 20px -14px rgba(20,48,63,.6);
+  transition:--p 1s linear;
+}
+.badge::before{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from -90deg,var(--blue) calc(var(--p) * 360deg),rgba(20,48,63,.12) 0);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));
+}
+.badge>*{position:relative;z-index:1}
+.badge-icon{width:var(--badge-icon);height:var(--badge-icon);color:var(--blue);display:block}
+.badge-num{font-family:var(--font-en);font-weight:600;font-size:var(--badge-num);line-height:1;
+  font-variant-numeric:tabular-nums}
+.badge-label{font-family:var(--font-en);font-size:var(--badge-label);line-height:1;
+  letter-spacing:.06em;color:var(--ink-40);text-transform:uppercase}
+
+/* السؤال */
+.q{margin:20px 0 0;text-align:center;font-size:23px;line-height:1.45;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.q-en{display:block;margin-top:7px;font-family:var(--font-en);font-size:13.5px;font-weight:500;color:var(--ink-55)}
+
+/* النجوم */
+.stars{display:flex;justify-content:center;gap:4px;margin-top:18px}
+.star{
+  appearance:none;-webkit-appearance:none;background:none;border:0;
+  padding:6px;cursor:pointer;line-height:0;border-radius:14px;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .32s cubic-bezier(.34,1.45,.64,1);
+}
+.star svg{width:var(--star);height:var(--star);display:block;transition:filter .4s ease}
+.star svg path{fill:none;stroke:rgba(20,48,63,.30);stroke-width:1.6;
+  transition:fill .3s ease,stroke .3s ease}
+.star.is-on svg path,.star[aria-pressed="true"] svg path{fill:var(--blue);stroke:var(--blue)}
+.star.is-on svg{filter:drop-shadow(0 8px 12px rgba(20,152,214,.42))}
+.star:hover{transform:translateY(-5px) scale(1.06)}
+.star:focus-visible{outline:3px solid rgba(20,152,214,.6);outline-offset:2px}
+.star.is-pop{animation:pop .55s cubic-bezier(.34,1.5,.64,1)}
+@keyframes pop{0%{transform:scale(.8)}55%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes softIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes softInSm{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* رسالة الرضا */
+.msg{
+  margin:16px 0 0;min-height:46px;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:10px 12px;border-radius:14px;
+  background:rgba(20,152,214,.09);
+  font-size:15.5px;font-weight:700;line-height:1.5;text-wrap:balance;
+  transition:background .35s ease,color .35s ease;
+}
+.msg > span{animation:softInSm .5s cubic-bezier(.16,1,.3,1)}
+.msg.is-hint{background:rgba(20,48,63,.05);color:var(--ink-55);font-weight:500;font-size:14.5px}
+.msg.is-warn{background:rgba(139,123,216,.14)}
+
+/* الأزرار — مكدّسة دائمًا (واتساب فوق، جوجل تحت) */
+.actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+.actions[hidden]{display:none}
+.actions.is-pop .btn{animation:rise .6s cubic-bezier(.16,1,.3,1) backwards}
+.actions.is-pop .btn:nth-child(2){animation-delay:.10s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:var(--btn-h);padding:10px 14px;border-radius:16px;
+  border:1.5px solid transparent;text-decoration:none;cursor:pointer;
+  font-family:var(--font-ui);font-size:var(--btn-fs);font-weight:700;
+  white-space:nowrap;
+  transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .35s ease,filter .3s ease;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+}
+.btn[hidden]{display:none}
+.btn .lbl{min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+  text-align:center;white-space:normal}
+.btn .lbl-main{display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-weight:800;line-height:1.3}
+.btn .lbl-sub{display:flex;flex-direction:column;align-items:center;gap:1px;
+  font-size:11.5px;font-weight:500;opacity:.9;line-height:1.35}
+.btn svg{flex:none}
+.btn:active{transform:scale(.97)}
+.btn--wa{background:var(--wa);color:#fff;box-shadow:0 14px 26px -16px rgba(31,168,85,.95)}
+.btn--wa:hover{filter:brightness(1.05);transform:translateY(-2px)}
+.btn--g{background:#fff;color:var(--ink);border-color:var(--ink-16);
+  box-shadow:0 10px 22px -18px rgba(20,48,63,.85)}
+.btn--g:hover{border-color:rgba(20,152,214,.55);transform:translateY(-2px)}
+.btn--g .lbl{flex-direction:row;flex-wrap:wrap;justify-content:center}
+.actions.is-full .btn--g{
+  background:var(--grad);color:#fff;border-color:transparent;
+  box-shadow:0 16px 30px -16px rgba(20,152,214,.95);
+  animation:rise .6s cubic-bezier(.16,1,.3,1),pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 16px 30px -16px rgba(20,152,214,.95)}
+  50%{box-shadow:0 18px 34px -12px rgba(20,152,214,1),0 0 0 7px rgba(20,152,214,.13)}
+}
+.actions .l-full{display:none}
+.actions.is-full .l-split{display:none}
+.actions.is-full .l-full{display:inline}
+
+/* ---------- 6) نقطة التوقف 380px: حشو، نجوم، أزرار ---------- */
+@media (max-width:380px){
+  :root{--pad:16px;--star:38px;--btn-fs:12.5px;--btn-h:48px}
+  .card{border-radius:22px}
+  .head{gap:6px}
+  .stars{gap:0}
+  .actions{gap:8px}
+  .btn{padding:9px 9px;gap:6px}
+  .btn svg{width:16px;height:16px}
+  .btn .lbl-sub{font-size:10.5px}
+}
+
+/* ---------- 7) إمكانية الوصول ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.001ms!important;
+    transition-delay:0s!important;
+    scroll-behavior:auto!important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- خلفية زخرفية: عقد عصبية + بقعة ضوء + صاعقة برق -->
+<div class="bg" aria-hidden="true">
+  <span class="blob blob--1"></span>
+  <span class="blob blob--2"></span>
+  <svg class="net" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" focusable="false">
+    <defs>
+      <linearGradient id="netGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#8B7BD8"/>
+        <stop offset="50%" stop-color="#5FC9B8"/>
+        <stop offset="100%" stop-color="#1498D6"/>
+      </linearGradient>
+    </defs>
+    <g stroke="url(#netGrad)" stroke-width="1.4" fill="none" opacity=".45">
+      <path d="M70 130 L215 60 L355 150 L330 305 L175 330 L70 245 Z"/>
+      <path d="M215 60 L175 330 M355 150 L70 245 M70 130 L330 305"/>
+      <path d="M935 855 L790 935 L655 830 L700 690 L860 665 L960 745 Z"/>
+      <path d="M790 935 L700 690 M655 830 L960 745 M935 855 L860 665"/>
+      <path d="M355 150 L655 830" opacity=".3"/>
+      <path d="M330 305 L700 690" opacity=".3"/>
+    </g>
+    <g fill="url(#netGrad)" opacity=".7">
+      <circle cx="70" cy="130" r="5"/><circle cx="215" cy="60" r="7"/><circle cx="355" cy="150" r="5"/>
+      <circle cx="330" cy="305" r="7"/><circle cx="175" cy="330" r="5"/><circle cx="70" cy="245" r="4"/>
+      <circle cx="935" cy="855" r="5"/><circle cx="790" cy="935" r="7"/><circle cx="655" cy="830" r="5"/>
+      <circle cx="700" cy="690" r="7"/><circle cx="860" cy="665" r="5"/><circle cx="960" cy="745" r="4"/>
+    </g>
+  </svg>
+  <svg class="bolt-wm" viewBox="0 0 24 24" focusable="false">
+    <polygon points="13 2 4 14 11 14 10 22 20 9 13 9"/>
+  </svg>
+</div>
+
+<!-- ============ 1) شاشة الافتتاحية ============ -->
+<section class="splash" id="splash">
+  <div class="splash-in">
+
+    <div class="lockup">
+      <img class="lockup-n" src="assets/nerve-n.png" alt="" width="408" height="429"
+           onerror="this.remove()">
+      <span class="word">
+        <img class="lockup-word" src="assets/nerve-wordmark.png" alt="نيرف NERVE" width="442" height="280"
+             onerror="document.documentElement.classList.add('no-logo');this.remove()">
+        <span class="word-txt" aria-hidden="true">NERVE</span>
+      </span>
+    </div>
+
+    <div class="timer" id="splashTimer" role="timer" aria-label="العدّاد التنازلي: 15 ثانية متبقية">
+      <svg class="ring" viewBox="0 0 184 184" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8B7BD8"/>
+            <stop offset="50%" stop-color="#5FC9B8"/>
+            <stop offset="100%" stop-color="#1498D6"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-track" cx="92" cy="92" r="87"/>
+        <circle class="ring-fill" id="ringFill" cx="92" cy="92" r="87"/>
+      </svg>
+      <div class="timer-read" aria-hidden="true">
+        <span class="splash-num" id="splashNum">15</span>
+        <span class="splash-label">SECONDS</span>
+      </div>
+    </div>
+
+    <div class="splash-copy">
+      <p class="splash-title">قيّم تجربتك خلال <span id="durTxt">15</span> ثانية</p>
+      <p class="splash-title-en en" lang="en" dir="ltr">Rate your experience in 15 seconds</p>
+    </div>
+
+    <p class="chip">
+      <svg class="chip-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <polygon points="13 2 4 14 11 14 10 22 20 9 13 9"/>
+      </svg>
+      <span>رأيك يشعل تجربتك القادمة</span>
+      <span class="sep">·</span>
+      <span class="en" lang="en" dir="ltr">Your opinion fuels the next cup</span>
+    </p>
+
+  </div>
+</section>
+
+<!-- ============ 2) بطاقة التقييم ============ -->
+<main class="stage" id="stage" aria-hidden="true">
+  <section class="card">
+
+    <header class="head">
+      <div class="badge" id="badge" role="timer" aria-label="العدّاد التنازلي: 15 ثانية متبقية">
+        <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 7v5l3 2"/>
+        </svg>
+        <span class="badge-num" id="badgeNum" aria-hidden="true">15</span>
+        <span class="badge-label" aria-hidden="true">SECONDS</span>
+      </div>
+
+      <div class="brand">
+        <span class="word">
+          <img src="assets/nerve-wordmark.png" alt="نيرف NERVE" width="442" height="280"
+               onerror="document.documentElement.classList.add('no-logo');this.remove()">
+          <span class="word-txt" aria-hidden="true">NERVE</span>
+        </span>
+      </div>
+
+      <div class="head-space" aria-hidden="true"></div>
+    </header>
+
+    <h1 class="q">
+      كيف كانت تجربتك معنا؟
+      <span class="q-en en" lang="en" dir="ltr">How was your experience?</span>
+    </h1>
+
+    <div class="stars" id="stars" role="radiogroup" aria-label="قيّم تجربتك من 1 إلى 5 نجوم" aria-describedby="msg">
+      <button type="button" class="star" data-v="1" aria-pressed="false" aria-label="1 من 5 نجوم">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24z"/></svg>
+      </button>
+      <button type="button" class="star" data-v="2" aria-pressed="false" aria-label="2 من 5 نجوم">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24z"/></svg>
+      </button>
+      <button type="button" class="star" data-v="3" aria-pressed="false" aria-label="3 من 5 نجوم">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24z"/></svg>
+      </button>
+      <button type="button" class="star" data-v="4" aria-pressed="false" aria-label="4 من 5 نجوم">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24z"/></svg>
+      </button>
+      <button type="button" class="star" data-v="5" aria-pressed="false" aria-label="5 من 5 نجوم">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24z"/></svg>
+      </button>
+    </div>
+
+    <p class="msg is-hint" id="msg" role="status" aria-live="polite">
+      <span>اختر عدد النجوم</span><span class="sep">·</span><span class="en" lang="en" dir="ltr">Tap a star to rate</span>
+    </p>
+
+    <div class="actions" id="actions" hidden>
+      <a class="btn btn--wa" id="whatsapp-link" href="https://wa.me/966546548050" rel="noopener">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true" focusable="false">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+        </svg>
+        <span class="lbl">
+          <span class="lbl-main"><span class="ar">تجربتك سيئة؟ تواصل معنا</span><span class="en" lang="en" dir="ltr">Bad experience? Talk to us</span></span>
+          <span class="lbl-sub"><span class="ar">فريق الدعم جاهز لسماع ملاحظاتك وشكواك</span><span class="en" lang="en" dir="ltr">Support team ready to hear you</span></span>
+        </span>
+      </a>
+
+      <a class="btn btn--g" id="google-link" href="https://maps.app.goo.gl/yfZiJEetH42GFw5N8">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+          <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.45 5.45 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z"/>
+          <path fill="#FBBC05" d="M5.27 14.29A7.16 7.16 0 0 1 4.9 12c0-.8.14-1.57.37-2.29V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z"/>
+        </svg>
+        <span class="lbl">
+          <span class="l-split"><span>تقييم جوجل</span><span class="sep">·</span><span class="en" lang="en" dir="ltr">Google</span></span>
+          <span class="l-full"><span>قيّمنا على جوجل</span><span class="sep">·</span><span class="en" lang="en" dir="ltr">Review us on Google</span></span>
+        </span>
+      </a>
+    </div>
+
+  </section>
+</main>
+
+<noscript>
+  <style>
+    .splash{display:none}
+    .stage{opacity:1;visibility:visible;transform:none}
+    .actions[hidden]{display:grid}
+  </style>
+</noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     إعدادات المتجر — عدّل من هنا فقط
+     ============================================================ */
+  var DUR = 15;              /* مدة العدّاد بالثواني */
+  var SPLASH_MS = 2500;      /* زمن بقاء شاشة الافتتاحية قبل الانزلاق */
+  var G_URL = 'https://maps.app.goo.gl/yfZiJEetH42GFw5N8';
+  var WA_NUMBER = '966546548050';
+  var WA_MESSAGE = 'السلام عليكم، زرت نيرف NERVE وتجربتي ما كانت بالمستوى المطلوب، وحبيت أشارككم ملاحظاتي.';
+  var HINT     = ['اختر عدد النجوم', 'Tap a star to rate'];
+  var TIME_UP  = ['وش تنتظر؟ قيمنا!', 'What are you waiting for? Rate us!'];
+  var SATISFACTION = [
+    ['نعتذر، طلبك ما وصل للمستوى', "Sorry — that wasn't our best"],
+    ['آسفون، من حقك الأفضل',        'We fell short — fair enough'],
+    ['شكرًا، بنتحسن مع كل طلب',      'Thanks — we get better every cup'],
+    ['يسعدنا! بنكمل على نفس الوتيرة', "Love that — we'll keep it up"],
+    ['ممتاز! نشوفك في الطلب الجاي',   'Excellent! See you on your next order']
+  ];
+  /* ============================================================ */
+
+  var RING_C = 2 * Math.PI * 87;   /* محيط حلقة r=87 */
+  var $ = function (s) { return document.querySelector(s); };
+
+  var splash = $('#splash');
+  var stage = $('#stage');
+  var splashTimer = $('#splashTimer');
+  var splashNum = $('#splashNum');
+  var badge = $('#badge');
+  var badgeNum = $('#badgeNum');
+  var ringFill = $('#ringFill');
+  var stars = Array.prototype.slice.call(document.querySelectorAll('.star'));
+  var msg = $('#msg');
+  var actions = $('#actions');
+  var wa = document.getElementById('whatsapp-link');
+  var go = document.getElementById('google-link');
+
+  var remaining = DUR;
+  var rating = 0;
+  var hovering = 0;
+  var timerId = null;
+
+  /* ---------- أدوات ---------- */
+  function bi(ar, en) {
+    var wrap = document.createElement('span');
+    var a = document.createElement('span'); a.className = 'ar'; a.textContent = ar;
+    var s = document.createElement('span'); s.className = 'sep'; s.textContent = '\u00B7';
+    var e = document.createElement('span');
+    e.className = 'en'; e.setAttribute('lang', 'en'); e.setAttribute('dir', 'ltr'); e.textContent = en;
+    wrap.appendChild(a); wrap.appendChild(s); wrap.appendChild(e);
+    return wrap;
+  }
+
+  function setMsg(ar, en, kind) {
+    msg.className = 'msg' + (kind ? ' ' + kind : '');
+    while (msg.firstChild) { msg.removeChild(msg.firstChild); }
+    msg.appendChild(bi(ar, en));
+  }
+
+  /* ---------- العدّاد ---------- */
+  function paintTimer() {
+    var p = remaining / DUR;
+    splashNum.textContent = remaining;
+    badgeNum.textContent = remaining;
+    if (ringFill) { ringFill.style.strokeDashoffset = (RING_C * (1 - p)).toFixed(2); }
+    badge.style.setProperty('--p', p);
+    var label = remaining > 0
+      ? '\u0627\u0644\u0639\u062F\u0627\u062F \u0627\u0644\u062A\u0646\u0627\u0632\u0644\u064A: ' + remaining + ' \u062B\u0627\u0646\u064A\u0629 \u0645\u062A\u0628\u0642\u064A\u0629'
+      : '\u0627\u0646\u062A\u0647\u0649 \u0627\u0644\u0648\u0642\u062A';
+    splashTimer.setAttribute('aria-label', label);
+    badge.setAttribute('aria-label', label);
+  }
+
+  function stopTimer() {
+    if (timerId !== null) { window.clearInterval(timerId); timerId = null; }
+  }
+
+  function tick() {
+    if (remaining <= 0) { return; }
+    remaining -= 1;
+    paintTimer();
+    if (remaining === 0) {
+      stopTimer();
+      if (!rating) { setMsg(TIME_UP[0], TIME_UP[1], 'is-warn'); }
+    }
+  }
+
+  /* ---------- النجوم ---------- */
+  function paintStars() {
+    var shown = hovering || rating;
+    stars.forEach(function (s, i) {
+      s.classList.toggle('is-on', i < shown);
+      s.setAttribute('aria-pressed', i < rating ? 'true' : 'false');
+    });
+  }
+
+  function setRating(v) {
+    rating = v;
+    hovering = 0;
+    paintStars();
+    setMsg(SATISFACTION[v - 1][0], SATISFACTION[v - 1][1], '');
+
+    var picked = stars[v - 1];
+    picked.classList.remove('is-pop');
+    void picked.offsetWidth;              /* إعادة تشغيل الحركة */
+    picked.classList.add('is-pop');
+
+    actions.hidden = false;
+    actions.classList.toggle('is-full', v >= 4);
+    wa.hidden = (v >= 4);
+    actions.classList.remove('is-pop');
+    void actions.offsetWidth;
+    actions.classList.add('is-pop');
+  }
+  stars.forEach(function (s, i) {
+    s.addEventListener('click', function () { setRating(i + 1); });
+    s.addEventListener('mouseenter', function () { hovering = i + 1; paintStars(); });
+    s.addEventListener('mouseleave', function () { hovering = 0; paintStars(); });
+    s.addEventListener('focus', function () { hovering = i + 1; paintStars(); });
+    s.addEventListener('blur', function () { hovering = 0; paintStars(); });
+  });
+
+  /* ---------- الروابط ---------- */
+  wa.href = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(WA_MESSAGE);
+  go.href = G_URL;
+
+  /* ---------- التشغيل ---------- */
+  var durTxt = $('#durTxt');
+  if (durTxt) { durTxt.textContent = DUR; }
+
+  paintTimer();
+  paintStars();
+  setMsg(HINT[0], HINT[1], 'is-hint');
+  timerId = window.setInterval(tick, 1000);
+
+  window.setTimeout(function () {
+    splash.classList.add('is-out');
+    splash.setAttribute('aria-hidden', 'true');
+    if ('inert' in splash) { splash.inert = true; }
+    stage.removeAttribute('aria-hidden');
+    stage.classList.add('is-in');
+  }, SPLASH_MS);
+})();
+</script>
+</body>
+</html>
